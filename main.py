@@ -7,47 +7,30 @@ from telegram.ext import (
 )
 import os
 
-# ===============================
-# TOKEN (Render → Environment)
-# ===============================
 TOKEN = os.getenv("BOT_TOKEN")
 
-# ===============================
-# /start
-# ===============================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 Сәлем!\nҚызмет алу үшін /buy деп жазыңыз"
     )
 
-# ===============================
-# /buy
-# ===============================
 async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("Қызмет 1", callback_data="service_1")],
         [InlineKeyboardButton("Қызмет 2", callback_data="service_2")]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     await update.message.reply_text(
         "🛒 Қызметті таңдаңыз:",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# ===============================
-# Батырмалар
-# ===============================
-async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def services(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    if query.data == "service_1":
-        total = 1000
-    else:
-        total = 2000
+    total = 1000 if query.data == "service_1" else 2000
 
-    pay_keyboard = [
+    keyboard = [
         [
             InlineKeyboardButton("Kaspi", callback_data="kaspi"),
             InlineKeyboardButton("Halyk", callback_data="halyk")
@@ -56,12 +39,9 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.message.reply_text(
         f"💰 Төлем: {total} тг\nТөлем әдісін таңдаңыз 👇",
-        reply_markup=InlineKeyboardMarkup(pay_keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# ===============================
-# Төлем батырмалары
-# ===============================
 async def payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -71,18 +51,15 @@ async def payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "halyk":
         await query.message.reply_text("💳 Halyk арқылы төлеңіз")
 
-# ===============================
-# MAIN
-# ===============================
 def main():
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buy", buy))
-    app.add_handler(CallbackQueryHandler(buttons, pattern="service_"))
+    app.add_handler(CallbackQueryHandler(services, pattern="service_"))
     app.add_handler(CallbackQueryHandler(payment, pattern="kaspi|halyk"))
 
-    print("🤖 Bot started")
+    print("🤖 Bot started (Railway)")
     app.run_polling()
 
 if __name__ == "__main__":
